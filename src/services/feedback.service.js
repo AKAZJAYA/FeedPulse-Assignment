@@ -1,5 +1,6 @@
 const Feedback = require('../models/Feedback');
 const ApiError = require('../utils/ApiError');
+const { analyzeFeedback } = require('./ai.service');
 
 /**
  * Create a new feedback entry.
@@ -7,6 +8,36 @@ const ApiError = require('../utils/ApiError');
 const createFeedback = async (data) => {
     const feedback = await Feedback.create(data);
     return feedback;
+};
+
+/**
+ * Process AI analysis in the background (fire-and-forget).
+ * Never throws — logs errors and exits gracefully.
+ */
+const processAIAnalysis = async (feedbackId, title, description) => {
+    try {
+        console.log(`🤖 Starting AI analysis for feedback: ${feedbackId}`);
+        const aiResult = await analyzeFeedback(title, description);
+
+        if (!aiResult) {
+            console.warn(`⚠️  AI analysis returned null for feedback: ${feedbackId}`);
+            return;
+        }
+
+        await Feedback.findByIdAndUpdate(feedbackId, {
+            ai_category: aiResult.category,
+            ai_sentiment: aiResult.sentiment,
+            ai_priority: aiResult.priority_score,
+            ai_summary: aiResult.summary,
+            ai_tags: aiResult.tags,
+            ai_processed: true,
+        });
+
+        console.log(`✅ AI analysis saved for feedback: ${feedbackId}`);
+    } catch (error) {
+        console.error(`❌ AI processing failed for feedback ${feedbackId}:`, error.message);
+        // Never crash — feedback is already saved
+    }
 };
 
 /**
@@ -60,6 +91,7 @@ const deleteFeedback = async (id) => {
 
 module.exports = {
     createFeedback,
+    processAIAnalysis,
     getAllFeedbacks,
     getFeedbackById,
     updateFeedback,

@@ -1,10 +1,11 @@
 const feedbackService = require('../services/feedback.service');
+const { analyzeFeedback } = require('../services/ai.service');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
 
 /**
  * @desc    Create new feedback
- * @route   POST /api/feedbacks
+ * @route   POST /api/feedback
  */
 const createFeedback = catchAsync(async (req, res) => {
     const { title, description, category, submitterName, submitterEmail } = req.body;
@@ -26,12 +27,16 @@ const createFeedback = catchAsync(async (req, res) => {
         submitterEmail,
     });
 
+    // ─── Respond immediately (don't block on AI) ───────
     res.status(201).json({
         success: true,
         data: feedback,
         error: null,
-        message: 'Feedback submitted successfully',
+        message: 'Feedback submitted successfully. AI analysis in progress.',
     });
+
+    // ─── Fire-and-forget AI processing ─────────────────
+    feedbackService.processAIAnalysis(feedback._id, title, description);
 });
 
 /**
