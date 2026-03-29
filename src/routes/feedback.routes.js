@@ -1,8 +1,10 @@
 const express = require('express');
 const feedbackController = require('../controllers/feedback.controller');
+const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Public routes
 router
     .route('/')
     .get(feedbackController.getAllFeedbacks)
@@ -10,8 +12,12 @@ router
 
 router
     .route('/:id')
-    .get(feedbackController.getFeedbackById)
-    .patch(feedbackController.updateFeedback)
-    .delete(feedbackController.deleteFeedback);
+    .get(feedbackController.getFeedbackById);
+
+// Protected routes (admin only)
+router
+    .route('/:id')
+    .patch(protect, feedbackController.updateFeedback)
+    .delete(protect, feedbackController.deleteFeedback);
 
 module.exports = router;
