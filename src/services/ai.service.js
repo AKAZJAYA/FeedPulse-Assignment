@@ -1,7 +1,7 @@
 const axios = require('axios');
 const config = require('../config');
 
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiApiKey}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiApiKey}`;
 
 /**
  * Analyze feedback using Google Gemini API.
